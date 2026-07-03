@@ -25,6 +25,14 @@ export default function Home() {
     setData(generateSchedule());
   }, []);
 
+  const todayString = useMemo(() => {
+    return new Date().toLocaleDateString("id-ID");
+  }, []);
+
+  const todaySchedule = useMemo(() => {
+    return data.find((d) => d.date.toLocaleDateString("id-ID") === todayString);
+  }, [data, todayString]);
+
   const months = [...new Set(data.map((d) => d.date.getMonth()))];
   const years = [...new Set(data.map((d) => d.date.getFullYear()))];
 
@@ -52,7 +60,54 @@ export default function Home() {
   );
 
   return (
+    
     <div className="min-h-screen bg-gray-100 p-6">
+      {todaySchedule ? (
+        <div
+          className={`mb-5 rounded-xl p-6 text-white shadow-lg border-2 ${todaySchedule.isHoliday
+              ? "bg-gradient-to-r from-red-600 to-red-500 border-red-700"
+              : todaySchedule.isFull
+                ? "bg-gradient-to-r from-yellow-500 to-amber-500 border-amber-600 !text-black"
+                : "bg-gradient-to-r from-blue-700 to-indigo-600 border-blue-800"
+            }`}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span className={`inline-block rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${todaySchedule.isFull ? "bg-black/10 text-black" : "bg-white/20 text-white"
+                }`}>
+                Jadwal Hari Ini ({todaySchedule.dayName}, {todayString})
+              </span>
+
+              <h1 className="mt-2 text-3xl font-extrabold tracking-tight">
+                {todaySchedule.isHoliday
+                  ? `Libur: ${todaySchedule.team}`
+                  : todaySchedule.isFull
+                    ? "🎉 SEMUA SQUAD WFO (Full Team)"
+                    : `🚀 SQUAD WFO: Team ${todaySchedule.team}`}
+              </h1>
+            </div>
+
+            <div className={`rounded-lg p-3 min-w-[200px] ${todaySchedule.isFull ? "bg-black/5" : "bg-white/10"
+              }`}>
+              <span className="text-xs font-semibold uppercase block opacity-80">
+                Cuti / Izin Hari Ini:
+              </span>
+              <p className="text-sm font-medium mt-1">
+                {todaySchedule.cuti.length ? todaySchedule.cuti.join(", ") : "- Tidak ada -"}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mb-5 rounded-xl bg-gradient-to-r from-gray-700 to-gray-600 border-gray-800 p-6 text-white shadow-lg border-2">
+          <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-bold uppercase tracking-wider">
+            Informasi
+          </span>
+          <h1 className="mt-2 text-2xl font-extrabold">
+            Tidak ada jadwal WFO untuk hari ini.
+          </h1>
+        </div>
+      )}
 
       <h2 className="mb-4 text-2xl font-bold">
         WFO Schedule (BAFWEB Squads)
@@ -136,7 +191,6 @@ export default function Home() {
           <option value="A">Team A</option>
           <option value="B">Team B</option>
           <option value="C">Team C</option>
-          <option value="D">Team D</option>
           <option value="Full">Full Team</option>
           <option value="Holiday">Libur</option>
         </select>
@@ -157,7 +211,6 @@ export default function Home() {
           <option value="A">Team A</option>
           <option value="B">Team B</option>
           <option value="C">Team C</option>
-          <option value="D">Team D</option>
         </select>
 
         <button

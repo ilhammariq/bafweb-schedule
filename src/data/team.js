@@ -1,20 +1,16 @@
-export const teams = ["A", "B", "C", "D"];
+export const teams = ["A", "B", "C"];
 
 export const teamMember = [
     {
         team: "A",
-        member: ["Ariq", "Fii"],
+        member: ["Arif", "Galu"],
     },
     {
         team: "B",
-        member: ["Galu", "Hilmy"],
+        member: ["Rengga", "Fii"],
     },
     {
         team: "C",
-        member: ["Abror", "Arif"],
-    },
-    {
-        team: "D",
-        member: ["Rengga", "Dita"],
+        member: ["Hilmy", "Dita"],
     },
 ];

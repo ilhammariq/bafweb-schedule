@@ -2,7 +2,7 @@ import { teams } from "../data/team";
 import { holidays } from "../data/holiday";
 import { cutiDays } from "../data/cuti";
 
-const startDate = new Date("2026-05-05");
+const startDate = new Date("2026-07-13");
 const endDate = new Date(startDate);
 endDate.setFullYear(endDate.getFullYear() + 1);
 
