@@ -1,4 +1,4 @@
-import { teams } from "../data/team";
+import { members } from "../data/member";
 import { holidays } from "../data/holiday";
 import { cutiDays } from "../data/cuti";
 
@@ -40,11 +40,11 @@ export function generateSchedule() {
 
     let data = [];
 
-    let teamIndex = 0;
-    let pendingTeam = null;
+    let memberIndex = 0;
+    let pendingMember = null;
 
     let cycle = 0;
-    let currentShuffle = shuffleWithSeed(teams, cycle);
+    let currentShuffle = shuffleWithSeed(members, cycle);
 
     while (currentDate < endDate) {
         const day = currentDate.getDay();
@@ -55,7 +55,7 @@ export function generateSchedule() {
                 dayName: currentDate.toLocaleDateString("id-ID", {
                     weekday: "long",
                 }),
-                team: "",
+                member: "",
                 cuti: [],
                 isHoliday: false,
                 isFull: false,
@@ -64,32 +64,32 @@ export function generateSchedule() {
             const holiday = getHoliday(currentDate);
 
             if (holiday) {
-                entry.team = holiday.name;
+                entry.member = holiday.name;
                 entry.isHoliday = true;
 
-                if (pendingTeam === null) {
-                    pendingTeam = currentShuffle[teamIndex % teams.length];
+                if (pendingMember === null) {
+                    pendingMember = currentShuffle[memberIndex % members.length];
                 }
             } else if (day === 4) {
-                entry.team = "Full Team";
+                entry.member = "Full Team";
                 entry.isFull = true;
             } else {
-                let team;
+                let member;
 
-                if (pendingTeam) {
-                    team = pendingTeam;
-                    pendingTeam = null;
-                    teamIndex++;
+                if (pendingMember) {
+                    member = pendingMember;
+                    pendingMember = null;
+                    memberIndex++;
                 } else {
-                    team = currentShuffle[teamIndex % teams.length];
-                    teamIndex++;
+                    member = currentShuffle[memberIndex % members.length];
+                    memberIndex++;
                 }
 
-                entry.team = team;
+                entry.member = member;
 
-                if (teamIndex % teams.length === 0) {
+                if (memberIndex % members.length === 0) {
                     cycle++;
-                    currentShuffle = shuffleWithSeed(teams, cycle);
+                    currentShuffle = shuffleWithSeed(members, cycle);
                 }
             }
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { generateSchedule } from "../utils/schedule";
 import { exportICS } from "../utils/exportICS";
-import { teamMember } from "../data/team";
+import { members } from "../data/member";
 
 export default function Home() {
   const [data, setData] = useState([]);
@@ -9,9 +9,9 @@ export default function Home() {
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
   const [day, setDay] = useState("");
-  const [team, setTeam] = useState("");
+  const [member, setMember] = useState("");
 
-  const [exportTeam, setExportTeam] = useState("A");
+  const [exportMember, setExportMember] = useState(members[0] || "");
 
   const ITEMS_PER_PAGE = 20;
 
@@ -19,7 +19,7 @@ export default function Home() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [month, year, day, team]);
+  }, [month, year, day, member]);
 
   useEffect(() => {
     setData(generateSchedule());
@@ -42,15 +42,15 @@ export default function Home() {
       if (year !== "" && d.date.getFullYear() != year) return false;
       if (day && d.dayName !== day) return false;
 
-      if (team) {
-        if (team === "Full") return d.isFull;
-        if (team === "Holiday") return d.isHoliday;
-        return d.team === team;
+      if (member) {
+        if (member === "Full") return d.isFull;
+        if (member === "Holiday") return d.isHoliday;
+        return d.member === member;
       }
 
       return true;
     });
-  }, [data, month, year, day, team]);
+  }, [data, month, year, day, member]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
 
@@ -60,15 +60,15 @@ export default function Home() {
   );
 
   return (
-    
+
     <div className="min-h-screen bg-gray-100 p-6">
       {todaySchedule ? (
         <div
           className={`mb-5 rounded-xl p-6 text-white shadow-lg border-2 ${todaySchedule.isHoliday
-              ? "bg-gradient-to-r from-red-600 to-red-500 border-red-700"
-              : todaySchedule.isFull
-                ? "bg-gradient-to-r from-yellow-500 to-amber-500 border-amber-600 !text-black"
-                : "bg-gradient-to-r from-blue-700 to-indigo-600 border-blue-800"
+            ? "bg-gradient-to-r from-red-600 to-red-500 border-red-700"
+            : todaySchedule.isFull
+              ? "bg-gradient-to-r from-yellow-500 to-amber-500 border-amber-600 !text-black"
+              : "bg-gradient-to-r from-blue-700 to-indigo-600 border-blue-800"
             }`}
         >
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -80,10 +80,10 @@ export default function Home() {
 
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight">
                 {todaySchedule.isHoliday
-                  ? `Libur: ${todaySchedule.team}`
+                  ? `Libur: ${todaySchedule.member}`
                   : todaySchedule.isFull
-                    ? "🎉 SEMUA SQUAD WFO (Full Team)"
-                    : `🚀 SQUAD WFO: Team ${todaySchedule.team}`}
+                    ? "🎉 SEMUA WFO (Full Team)"
+                    : `🚀 WFO: ${todaySchedule.member}`}
               </h1>
             </div>
 
@@ -110,20 +110,16 @@ export default function Home() {
       )}
 
       <h2 className="mb-4 text-2xl font-bold">
-        WFO Schedule (BAFWEB Squads)
+        WFO Schedule (BAFWEB)
       </h2>
 
-      {/* Team Notes */}
+      {/* Member Notes */}
 
       <div className="mb-5 rounded border-l-4 border-slate-700 bg-slate-100 p-4">
-        <strong>Notes</strong>
+        <strong>Anggota</strong>
 
-        <div className="mt-2 space-y-1">
-          {teamMember.map((item) => (
-            <div key={item.team}>
-              Team {item.team}: {item.member.join(", ")}
-            </div>
-          ))}
+        <div className="mt-2">
+          {members.join(", ")}
         </div>
       </div>
 
@@ -180,17 +176,19 @@ export default function Home() {
           <option value="Jumat">Jumat</option>
         </select>
 
-        <label>Team</label>
+        <label>Nama</label>
 
         <select
-          value={team}
-          onChange={(e) => setTeam(e.target.value)}
+          value={member}
+          onChange={(e) => setMember(e.target.value)}
           className="rounded border px-3 py-2"
         >
           <option value="">Semua</option>
-          <option value="A">Team A</option>
-          <option value="B">Team B</option>
-          <option value="C">Team C</option>
+          {members.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
           <option value="Full">Full Team</option>
           <option value="Holiday">Libur</option>
         </select>
@@ -201,20 +199,22 @@ export default function Home() {
 
       <div className="mb-5 flex items-center gap-3">
 
-        <label>Pilih Team</label>
+        <label>Pilih Nama</label>
 
         <select
-          value={exportTeam}
-          onChange={(e) => setExportTeam(e.target.value)}
+          value={exportMember}
+          onChange={(e) => setExportMember(e.target.value)}
           className="rounded border px-3 py-2"
         >
-          <option value="A">Team A</option>
-          <option value="B">Team B</option>
-          <option value="C">Team C</option>
+          {members.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
         </select>
 
         <button
-          onClick={() => exportICS(data, exportTeam)}
+          onClick={() => exportICS(data, exportMember)}
           className="rounded bg-slate-800 px-4 py-2 text-white hover:bg-slate-700"
         >
           Export Calendar (.ics)
@@ -262,10 +262,10 @@ export default function Home() {
 
                 <td className="border border-gray-600 px-4 py-2 text-center">
                   {item.isHoliday
-                    ? item.team
+                    ? item.member
                     : item.isFull
                       ? "Full Team"
-                      : `Team ${item.team}`}
+                      : item.member}
                 </td>
 
                 <td className="border border-gray-600 px-4 py-2 text-center">
