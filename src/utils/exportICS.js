@@ -21,7 +21,7 @@ export function exportICS(data, member) {
             `UID:${ymd}-${item.member}@wfo`,
             `DTSTART;VALUE=DATE:${ymd}`,
             `DTEND;VALUE=DATE:${ymd}`,
-            `SUMMARY:WFO ${item.isFull && "TEAM "} ${item.team}`,
+            `SUMMARY:WFO ${item.member}`,
             "END:VEVENT"
         );
     });
