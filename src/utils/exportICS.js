@@ -1,4 +1,4 @@
-export function exportICS(data, selectedTeam) {
+export function exportICS(data, member) {
     let ics = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
@@ -9,9 +9,7 @@ export function exportICS(data, selectedTeam) {
     data.forEach((item) => {
         if (item.isHoliday) return;
 
-        if (selectedTeam) {
-            if (!item.isFull && item.team !== selectedTeam) return;
-        }
+        if (!item.isFull && item.member !== member) return;
 
         const ymd = item.date
             .toISOString()
@@ -20,10 +18,10 @@ export function exportICS(data, selectedTeam) {
 
         ics.push(
             "BEGIN:VEVENT",
-            `UID:${ymd}-${item.team}@wfo`,
+            `UID:${ymd}-${item.member}@wfo`,
             `DTSTART;VALUE=DATE:${ymd}`,
             `DTEND;VALUE=DATE:${ymd}`,
-            `SUMMARY:WFO Team ${item.team}`,
+            `SUMMARY:WFO ${item.isFull && "TEAM "} ${item.team}`,
             "END:VEVENT"
         );
     });
@@ -36,6 +34,6 @@ export function exportICS(data, selectedTeam) {
 
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `wfo-team-${selectedTeam}.ics`;
+    a.download = `wfo-${member}.ics`;
     a.click();
 }
