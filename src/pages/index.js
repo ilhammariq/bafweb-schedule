@@ -163,7 +163,7 @@ export default function Home() {
 
   const [exportMember, setExportMember] = useState(members[0] || "");
 
-  const ITEMS_PER_PAGE = 20;
+  const ITEMS_PER_PAGE = 15;
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -425,7 +425,7 @@ export default function Home() {
 
             <button
               onClick={() => exportICS(data, exportMember)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-300"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-300 cursor-pointer"
             >
               <svg
                 viewBox="0 0 20 20"
@@ -443,7 +443,7 @@ export default function Home() {
 
         {/* Table */}
         <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto pb-1 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-slate-200 [&::-webkit-scrollbar-thumb]:bg-slate-500">
             <table className="min-w-[680px] w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold text-slate-500">
@@ -489,11 +489,6 @@ export default function Home() {
                       </td>
                       <td className="px-5 py-3 text-slate-600">
                         {item.date.toLocaleDateString("id-ID")}
-                        {isToday && (
-                          <span className="ml-2 rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                            Hari ini
-                          </span>
-                        )}
                       </td>
                       <td className="px-5 py-3">
                         <StatusBadge item={item} />
