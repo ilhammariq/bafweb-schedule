@@ -1,12 +1,54 @@
 import { useEffect, useMemo, useState } from "react";
 import { generateSchedule } from "../utils/schedule";
 import { exportICS } from "../utils/exportICS";
+import { fetchCutiDays } from "../utils/fetchCuti";
 import { members } from "../data/member";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// Link spreadsheet untuk input data cuti (dari .env.local)
+const CUTI_SHEET_URL = process.env.NEXT_PUBLIC_CUTI_URL;
+
 const startOfDay = (d) =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+// Date -> "yyyy-mm-dd" (waktu lokal, bukan UTC)
+const toKey = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+// Samakan penulisan nama dari spreadsheet dengan daftar members
+const canonicalName = (name = "") =>
+  members.find((m) => m.toLowerCase() === name.trim().toLowerCase()) ||
+  name.trim();
+
+// Urutkan sesuai urutan members supaya konsisten
+const byMemberOrder = (a, b) => {
+  const ia = members.indexOf(a);
+  const ib = members.indexOf(b);
+  return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+};
+
+// Gabungkan data cuti dari spreadsheet ke jadwal berdasarkan tanggal
+const mergeCuti = (schedule, cutiDays) => {
+  const byDate = {};
+  cutiDays.forEach(({ date, name }) => {
+    (byDate[date] ||= []).push(canonicalName(name));
+  });
+
+  return schedule.map((item) => ({
+    ...item,
+    cuti: [
+      ...new Set([
+        ...(item.cuti || []).map(canonicalName),
+        ...(byDate[toKey(item.date)] || []),
+      ]),
+    ].sort(byMemberOrder),
+  }));
+};
 
 const initials = (name = "") =>
   name
@@ -53,7 +95,7 @@ function StatusBadge({ item }) {
   );
 }
 
-function CutiPills({ list, tone = "light" }) {
+function CutiPills({ list = [], tone = "light" }) {
   if (!list.length) {
     return (
       <span className={tone === "light" ? "text-slate-400" : "opacity-70"}>
@@ -61,17 +103,25 @@ function CutiPills({ list, tone = "light" }) {
       </span>
     );
   }
+
+  const isLight = tone === "light";
+
   return (
     <div className="flex flex-wrap gap-1.5">
       {list.map((n) => (
         <span
           key={n}
           className={
-            tone === "light"
-              ? "rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700"
-              : "rounded-md bg-white/20 px-2 py-0.5 text-xs font-medium"
+            isLight
+              ? "inline-flex items-center gap-2 rounded-full bg-indigo-50 py-1 pl-1 pr-3 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200"
+              : "inline-flex items-center gap-2 rounded-full bg-white/20 py-1 pl-1 pr-3 text-xs font-semibold ring-1 ring-inset ring-white/30"
           }
         >
+          <Avatar
+            name={n}
+            className={`!h-5 !w-5 !text-[10px] ${isLight ? "!bg-white" : "!bg-white/30 !text-inherit"
+              }`}
+          />
           {n}
         </span>
       ))}
@@ -155,6 +205,8 @@ function MiniScheduleCard({ item, type }) {
 
 export default function Home() {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [cutiError, setCutiError] = useState(false);
 
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
@@ -170,9 +222,35 @@ export default function Home() {
     setCurrentPage(1);
   }, [month, year, day, member]);
 
+  // Ambil data cuti dari spreadsheet, lalu bentuk jadwal
   useEffect(() => {
-    setData(generateSchedule());
+    let cancelled = false;
+
+    (async () => {
+      let cutiDays = [];
+      try {
+        cutiDays = await fetchCutiDays();
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) setCutiError(true);
+      }
+      if (cancelled) return;
+
+      setData(mergeCuti(generateSchedule(), cutiDays));
+      setLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  // Banner error hilang otomatis setelah 3 detik
+  useEffect(() => {
+    if (!cutiError) return;
+    const t = setTimeout(() => setCutiError(false), 3000);
+    return () => clearTimeout(t);
+  }, [cutiError]);
 
   const todayString = useMemo(() => new Date().toLocaleDateString("id-ID"), []);
 
@@ -241,18 +319,52 @@ export default function Home() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
         {/* Header */}
-        <header className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Jadwal WFO BAFWEB
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Lihat siapa yang masuk kantor hari ini, cek jadwal tim, lalu ekspor
-            ke kalender.
-          </p>
+        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Jadwal WFO BAFWEB
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Lihat siapa yang masuk kantor hari ini, cek jadwal tim, lalu
+              ekspor ke kalender.
+            </p>
+          </div>
+
+          {CUTI_SHEET_URL && (
+            <a
+              href={CUTI_SHEET_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200"
+            >
+              <svg
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+              </svg>
+              Input data cuti
+            </a>
+          )}
         </header>
 
+        {/* Warning kalau data cuti gagal dimuat */}
+        {cutiError && (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Data cuti dari spreadsheet gagal dimuat. Jadwal ditampilkan tanpa
+            data cuti.
+          </div>
+        )}
+
         {/* Today hero */}
-        {todaySchedule ? (
+        {loading ? (
+          <section className="rounded-3xl bg-gradient-to-br from-slate-800 to-slate-700 p-6 text-white shadow-lg sm:p-8">
+            <p className="text-sm font-medium opacity-80">Memuat jadwal...</p>
+          </section>
+        ) : todaySchedule ? (
           <section
             className={`relative overflow-hidden rounded-3xl bg-gradient-to-br p-6 shadow-lg sm:p-8 ${heroTheme}`}
           >
@@ -462,7 +574,9 @@ export default function Home() {
                       colSpan={5}
                       className="px-5 py-12 text-center text-slate-400"
                     >
-                      Tidak ada jadwal yang cocok dengan filter.
+                      {loading
+                        ? "Memuat jadwal..."
+                        : "Tidak ada jadwal yang cocok dengan filter."}
                     </td>
                   </tr>
                 )}
