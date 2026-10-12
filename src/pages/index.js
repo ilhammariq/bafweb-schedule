@@ -6,8 +6,7 @@ import { members } from "../data/member";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// Link spreadsheet untuk input data cuti (dari .env.local)
-const CUTI_SHEET_URL = process.env.NEXT_PUBLIC_CUTI_URL;
+const CUTI_SHEET_URL = process.env._CUTI_URL;
 
 const startOfDay = (d) =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
