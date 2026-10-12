@@ -1,6 +1,5 @@
 import { members } from "../data/member";
 import { holidays } from "../data/holiday";
-import { cutiDays } from "../data/cuti";
 
 const startDate = new Date("2026-07-13");
 const endDate = new Date(startDate);
@@ -27,14 +26,8 @@ function getHoliday(date) {
     return holidays.find((h) => h.date === d);
 }
 
-function getCuti(date) {
-    const d = date.toISOString().split("T")[0];
-
-    return cutiDays
-        .filter((c) => c.tanggal.includes(d))
-        .map((c) => c.name);
-}
-
+// Data cuti tidak diisi di sini lagi.
+// Diambil dari spreadsheet dan digabung di Home.jsx (mergeCuti).
 export function generateSchedule() {
     let currentDate = new Date(startDate);
 
@@ -92,8 +85,6 @@ export function generateSchedule() {
                     currentShuffle = shuffleWithSeed(members, cycle);
                 }
             }
-
-            entry.cuti = getCuti(currentDate);
 
             data.push(entry);
         }
