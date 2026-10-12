@@ -1,4 +1,4 @@
-const CSV_URL = process.env.NEXT_PUBLIC_CUTI_URL_API;
+const CSV_URL = process.env.CUTI_URL_API;
 
 // Terima "yyyy-mm-dd" atau "m/d/yyyy" (locale US), hasil selalu "yyyy-mm-dd"
 const normalizeDate = (value) => {
